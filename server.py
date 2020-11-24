@@ -64,6 +64,39 @@ def Init():  # this function will be called to initilize the server
             f"THE NUMBER OF ACTIVE CONNECTIONS IS CURRENTLY  {threading.active_count() - 1}")
 
 
+def CreateJob(string):
+    if(string == 'IsIPOnline'):
+        IsIPOnline()
+    elif(string == 'LookupNetworkConn'):
+        LookupNetworkConn()
+    elif(string == 'TCPFlood'):
+        TCPFlood()
+    else:
+        UDPFlood()
+
+
+def IsIPOnline():
+    print("BLANK IS ONLINE!")
+
+
+def LookupNetworkConn():
+    print("LOOKED UP!")
+
+
+def TCPFlood():
+    print("BLANK HAS BEEN TCP FLOODED!")
+
+
+def UDPFlood():
+    print("BLANK HAS BEEN UDP FLOODED!")
+
+
+# CreateJob('IsIPOnline')
+# CreateJob('LookupNetworkConn')
+# CreateJob('TCPFlood')
+# CreateJob('UDPFlood')
+
+
 print("initializing server...")
 Init()
 
