@@ -1,6 +1,10 @@
 # JOBS:
 # ONE TO ONE
 # 1) given IP address/Hostname    IS ONLINE/ ARE THEY CONNECTED TO THE NETWORK?  --- JOB SEEKER FINDS THIS OUT NOTE: is this sniffing? must include IP
+# LINUX: ip addr show
+#WINDOWS: ipconfig /all
+
+
 # 2) detect status of given port at an IP address (open/closed/filtered), can use UDP or TCP ports. MUST INCLUDE IP + port number
 # 3) detect all live IP addresses on a given subet. target subnet is required  in a.b.c.d/x format?
 # 4) detect status of all registered TCP-UDP ports on given IP address/subnet
