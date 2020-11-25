@@ -13,13 +13,16 @@
 # requirements know sniffing and sending packets I guess.
 
 import socket  # socket object will be used to make the connection
+#from scapy.all import ARP, Ether, srp
+
+
 # CONSTANTS
 HEADER = 64  # wILL BE THE HEADER LENGTH
 PORT = 5050  # Port that the socket will be using
 FORMAT = 'utf-8'  # THIS WILL BE THE ENCODING FORMAT WHEN SENDING HEADER
-# WHEN CLEINT DISCONNECTS OR TERMINATES CONNECTION
+# WHEN CLIENT DISCONNECTS OR TERMINATES CONNECTION
 DISCONNECT_MESSAGE = "!disconnect"
-# NOTE THIS IS LOCAL IP ADDRESS ON LAN, PLEASE ADJUST IT TO THE SERVER IP ADDRESS BY RUNNING IPCONFIG ON WINDOWS
+# NOTE THIS IS LOCAL IP ADDRESS ON LAN, PLEASE ADJUST IT TO THE SERVER IP ADDRESS BY RUNNING ifconfig on linux or ipconfig /all on Windows
 SERVER = "192.168.1.134"
 ADDR = (SERVER, PORT)  # ADDRESS WILL BE TUPLE OF IP ADDRESS OF SERVER AND PORT#
 # CREATE NEW VARIABLE CALLED CLIENT AND MAKE IT AN OBJECT OF THIS CONNECTION
@@ -40,12 +43,18 @@ def send(msg):  # DEFINED FUNCTION TO SEND MSG FROM CLIENT
     print(client.recv(2048).decode(FORMAT))  # print receive message from
 
 
-send("Hello World!")  # first message to send
-
+send("[HELLO] Hello World!")  # first message to send
+input()
 send("Computer Network is fun!")  # second message to send
 input()  # when user hits enter or any input it will now disconnect
 send("Disconnecting now!")  # disconnect message
 send(DISCONNECT_MESSAGE)  # send disconnect message
+
+
+def greetingMsg():
+    return 
+
+
 
 
 # scapy

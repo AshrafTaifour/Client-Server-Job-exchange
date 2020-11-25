@@ -22,18 +22,20 @@ import threading
 # Variables below are constants
 HEADER = 64  # header describes the properties of the message that it comes with
 PORT = 5050  # Port that the socket will be using
-HOST_NAME = socket.gethostname()  # will obtain the name of the machine
-# will obtain the IP address by using the machine name
-SERVER = socket.gethostbyname(HOST_NAME)
-
+SERVER = '192.168.1.134'  # my machine's IP, obtained by ifconfig
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((SERVER, PORT))  # passed as tuple
 FORMAT = 'utf-8'
 DISCONNECT_MSG = "!disconnect"
 
 
-def ClientHandler(addr, conn):  # function takes in a socket object and an address
+# function takes in a socket object and an address, this is unique to each client
+def ClientHandler(addr, conn):
     print(f"Client {addr} has connected.")
+
+    # variable is used to check if the connected client used the proper [HELLO] protocol
+    HELO_PROTO = False
+
     connected = True
     while connected:
         msg_length = conn.recv(HEADER).decode(FORMAT)
@@ -44,6 +46,14 @@ def ClientHandler(addr, conn):  # function takes in a socket object and an addre
             msg = conn.recv(msg_length).decode(FORMAT)
             # displays message
             print(f"{addr}  has sent the following message: {msg}")
+
+            if(HELO_PROTO == False):
+                # 0:7 is [HELLO] which is the first msg that is agreed on
+                HELO_PROTO = EstablishConn(msg[0:7])
+                connected = HELO_PROTO
+
+            # TODO: send this once (and wait until client has completed the job)
+            conn.send(IsIPOnline('192.168.1.123', 'none'))
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()
@@ -64,19 +74,21 @@ def Init():  # this function will be called to initilize the server
             f"THE NUMBER OF ACTIVE CONNECTIONS IS CURRENTLY  {threading.active_count() - 1}")
 
 
-def CreateJob(string):
-    if(string == 'IsIPOnline'):
-        IsIPOnline()
-    elif(string == 'LookupNetworkConn'):
-        LookupNetworkConn()
-    elif(string == 'TCPFlood'):
-        TCPFlood()
+def EstablishConn(initMsg):  # ensures client is using correct protocol
+    if(initMsg == "[HELLO]"):
+        print("HELLO PROTOCOL SUCCESSFULL, CONNECTION ESTABLISHED")
+        return True
     else:
-        UDPFlood()
+        print("HELLO PROTOCOL FAILED, DISCONNECTING")
+        return False
 
 
-def IsIPOnline():
-    print("BLANK IS ONLINE!")
+# asks client if an IP address or hostname are online on a network.
+def IsIPOnline(ipaddr, hostname):
+    if(hostname == "none"):
+        return f"[IP#1] Is {ipaddr} Online?".encode(FORMAT)
+    else:
+        return f"[IP#2] Is {hostname} Online?".encode(FORMAT)
 
 
 def LookupNetworkConn():
@@ -90,7 +102,7 @@ def TCPFlood():
 def UDPFlood():
     print("BLANK HAS BEEN UDP FLOODED!")
 
-#test
+# test
 # CreateJob('IsIPOnline')
 # CreateJob('LookupNetworkConn')
 # CreateJob('TCPFlood')
