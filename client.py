@@ -13,7 +13,7 @@
 # requirements know sniffing and sending packets I guess.
 
 import socket  # socket object will be used to make the connection
-#from scapy.all import ARP, Ether, srp
+from scapy.all import ARP, Ether, srp
 
 
 # CONSTANTS
@@ -40,19 +40,50 @@ def send(msg):  # DEFINED FUNCTION TO SEND MSG FROM CLIENT
     # send info to server first of the padded header message
     client.send(send_length)
     client.send(message)  # send encoded message to server
-    print(client.recv(2048).decode(FORMAT))  # print receive message from
+    
+
+def greetingMsg(): #'[HELLO]' protocol establishes the connection
+    return "[HELLO] Hello World!"
 
 
-send("[HELLO] Hello World!")  # first message to send
+#def JobHandler():
+
+
+def CheckIP(string, target_ip): #sends ARP request to an IP address followed by a broadcast packet, response will have a MAC address with all network users' IPs
+	if string == '[IP#1]': #find if host is online by ip addr
+		arp = ARP(pdst = target_ip) #create ARP packet
+		ether = Ether(dst="ff:ff:ff:ff:ff:ff") #create ether broadcast packet
+		packet = ether/arp #stacks ether and arp packets 
+		result = srp(packet, timeout=3)[0] #sends the packet and receives them at the data link layer, times out in 3 secs
+		#result contains sent and received packet in pairs
+		clients = []
+		for sent, received in result:
+			#will append ip and MAC address to 'clients' list for every response received.
+			 clients.append({'ip': received.psrc, 'mac': received.hwsrc})
+		return clients
+
+	#else: #find if host is online by hostname
+
+
+
+send(greetingMsg())  # first message to send
 input()
-send("Computer Network is fun!")  # second message to send
+rcvd_msg = client.recv(2048).decode(FORMAT)
+clients = CheckIP(rcvd_msg[0:6], rcvd_msg[10:26])
+print(rcvd_msg)  # print receive message from
+send("The Following Devices are currently connected to the network: ")
+input()
+for client in clients:
+	client_str = str("{:16}    {}".format(client['ip'], client['mac']))
+	print(client_str)
+	#client_str = f"{client.ip}"
+	#send(client_str)
 input()  # when user hits enter or any input it will now disconnect
 send("Disconnecting now!")  # disconnect message
 send(DISCONNECT_MESSAGE)  # send disconnect message
 
 
-def greetingMsg():
-    return 
+
 
 
 

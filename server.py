@@ -53,7 +53,8 @@ def ClientHandler(addr, conn):
                 connected = HELO_PROTO
 
             # TODO: send this once (and wait until client has completed the job)
-            conn.send(IsIPOnline('192.168.1.123', 'none'))
+            # check if this IP address is online
+            conn.send(IsIPOnline('192.168.1.144/24', 'none'))
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()
