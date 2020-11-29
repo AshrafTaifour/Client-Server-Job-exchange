@@ -1,97 +1,193 @@
+# INSTRUCTIONS:
+# 1) Change the SERVER const to match your machine's server
+# 2) Change jobs instructions to match IPs and Machines that are online on your network
+# 2) run server.py first
+# 3) run client.py with administrator priviledges
+
 # JOBS:
 # ONE TO ONE
-# 1) given IP address/Hostname    IS ONLINE/ ARE THEY CONNECTED TO THE NETWORK?  --- JOB SEEKER FINDS THIS OUT NOTE: is this sniffing? must include IP
-# 2) detect status of given port at an IP address (open/closed/filtered), can use UDP or TCP ports. MUST INCLUDE IP + port number
-# 3) detect all live IP addresses on a given subet. target subnet is required  in a.b.c.d/x format?
-# 4) detect status of all registered TCP-UDP ports on given IP address/subnet
+# 1) given IP address/Hostname    IS ONLINE/ ARE THEY CONNECTED TO THE NETWORK? NOTE: name of function is checkOneIP
+# 3) detect all live IP addresses on a given subet. NOTE: name of function is checkAllIPs
 
 # ONE-TO-MANY
 # 1) execute an ICMP flood attack against a given IP or subnet
 # 2) execute a TCP flood attack against an IP or port
 # 3) UDP flood attack on IP/Port
 
-# requirements know sniffing and sending packets I guess.
-
 import socket  # socket object will be used to make the connection
 from scapy.all import ARP, Ether, srp
 
 
 # CONSTANTS
-HEADER = 64  # wILL BE THE HEADER LENGTH
+HEADER = 1024  # wILL BE THE HEADER LENGTH
 PORT = 5050  # Port that the socket will be using
-FORMAT = 'utf-8'  # THIS WILL BE THE ENCODING FORMAT WHEN SENDING HEADER
-# WHEN CLIENT DISCONNECTS OR TERMINATES CONNECTION
-DISCONNECT_MESSAGE = "!disconnect"
-# NOTE THIS IS LOCAL IP ADDRESS ON LAN, PLEASE ADJUST IT TO THE SERVER IP ADDRESS BY RUNNING ifconfig on linux or ipconfig /all on Windows
-SERVER = "192.168.1.134"
+FORMAT = 'utf-8'  # To encode messages that are sent
+DISCONNECT_MESSAGE = '!disconnect'  # disconnect protocol msg
+# NOTE: THIS IS LOCAL IP ADDRESS ON LAN, PLEASE ADJUST IT TO THE SERVER IP ADDRESS BY RUNNING ifconfig on linux or ipconfig /all on Windows
+SERVER = '192.168.1.134'
 ADDR = (SERVER, PORT)  # ADDRESS WILL BE TUPLE OF IP ADDRESS OF SERVER AND PORT#
 # CREATE NEW VARIABLE CALLED CLIENT AND MAKE IT AN OBJECT OF THIS CONNECTION
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDR)  # CLIENT CONNECTS TO ABOVE IP ADDRESS
 
 
-def send(msg):  # DEFINED FUNCTION TO SEND MSG FROM CLIENT
-    message = msg.encode(FORMAT)  # TAKE MSG AND ENCOD IT
-    msg_length = len(message)  # GET LENGTH OF ENCODED MESSAGE
+def sendMsgToServer(msg):  # sends msg to server
+    message = msg.encode(FORMAT)  # encodes msg with utf-8
+    msg_length = len(message)
     # SEND_length for header is equal to encoded message length
     send_length = str(msg_length).encode(FORMAT)
+
     # padd the message up to 124 bits adding b' ' byte of space
     send_length += b' ' * (HEADER - len(send_length))
-    # send info to server first of the padded header message
-    client.send(send_length)
+    client.send(send_length)  # send info to server with padded header message
     client.send(message)  # send encoded message to server
-    
-
-def greetingMsg(): #'[HELLO]' protocol establishes the connection
-    return "[HELLO] Hello World!"
 
 
-#def JobHandler():
+def greetingMsg():  # '[HELLO]' protocol establishes the connection with server
+    return '[HELLO] Hello World!'
 
 
-def CheckIP(string, target_ip): #sends ARP request to an IP address followed by a broadcast packet, response will have a MAC address with all network users' IPs
-	if string == '[IP#1]': #find if host is online by ip addr
-		arp = ARP(pdst = target_ip) #create ARP packet
-		ether = Ether(dst="ff:ff:ff:ff:ff:ff") #create ether broadcast packet
-		packet = ether/arp #stacks ether and arp packets 
-		result = srp(packet, timeout=3)[0] #sends the packet and receives them at the data link layer, times out in 3 secs
-		#result contains sent and received packet in pairs
-		clients = []
-		for sent, received in result:
-			#will append ip and MAC address to 'clients' list for every response received.
-			 clients.append({'ip': received.psrc, 'mac': received.hwsrc})
-		return clients
-
-	#else: #find if host is online by hostname
+def sendClnts(client_lst):  # takes string list of clients and sends them to the server
+    sendMsgToServer(
+        "The Following Devices are currently connected to the network: ")
+    for clnt in client_lst:
+        sendMsgToServer(clnt)
 
 
+# will take a job order from the server and execute the order.
+def jobHandler(string):
+    # the first portion of the string specifies which job to execute, this is standard in the protcol
+    PROTOCOL_MSG = string[0:6]
+    if PROTOCOL_MSG == '[IP#1]':
+        # 49:65 is the location of the IP address of protocol IP#1
+        target_ip = parseIP1(string)
+        client_list = checkAllIPs(target_ip)
+        return client_list
+    elif PROTOCOL_MSG == '[IP#2]':
+        # 10:26 is the location of the IP address of protocol IP#2
+        target_ip = parseIP2_3(string)
+        hostname = 'none'
+        return checkOneIP(target_ip, hostname)
+    elif PROTOCOL_MSG == '[IP#3]':
+        target_ip = 'none'
+        hostname = parseIP2_3(string)
+        isIPResult = checkOneIP(target_ip, hostname)
+        return isIPResult
 
-send(greetingMsg())  # first message to send
+
+# takes an ip, finds out all the connections in its subnet.
+def checkAllIPs(target_ip):
+    arp = ARP(pdst=target_ip)  # create ARP packet
+    ether = Ether(dst="ff:ff:ff:ff:ff:ff")  # create ether broadcast packet
+    packet = ether/arp  # stacks ether and arp packets
+    # sends the packet and receives them at the data link layer, times out in 3 secs
+    result = srp(packet, timeout=3)[0]
+    # result contains sent and received packet in pairs
+    clients = []
+    for sent, received in result:
+        # will append ip and MAC address to 'clients' list for every response received.
+        clients.append({'ip': received.psrc, 'mac': received.hwsrc})
+
+    clnt_lst = []
+    for clnt in clients:
+        # take only the ip component and append it to a list of type string.
+        clnt_lst.append(str("{}".format(clnt['ip'])))
+
+    return clnt_lst  # returns a string list of clients that are connected to the subnet
+
+
+def checkOneIP(target_ip, hostname):  # takes ip OR hostname
+    IPCONNMSG = f"{target_ip} is connected to the network!"
+    IPNOTCONNMSG = f"{target_ip} is NOT connected to the network!"
+    HSTCONNMSG = f"{hostname} is connected to the network!"
+    HSTNOTCONNMSG = f"{hostname} is NOT connected to the network!"
+
+    if(hostname == 'none'):  # we only have target_ip
+        online_lst = checkAllIPs(target_ip)  # check subnet
+        print(target_ip)
+        print(online_lst)
+        if(target_ip in online_lst):  # if given ip is in subnet
+            return IPCONNMSG
+        else:
+            return IPNOTCONNMSG
+    else:  # we only have hostname
+        if(target_ip == 'none'):  # if there's no IP given, use your subnet's IP address
+            wanted_IP = SERVER + '/24'  # use this as the default IP
+        else:
+            wanted_IP = target_ip
+
+        # returns list of connected IPs to the subnet
+        online_lst = checkAllIPs(wanted_IP)
+
+        # returns list of machine names that are connected to the subnet
+        online_machnLst = findHostNames(online_lst)
+
+        if(hostname in online_machnLst):
+            return HSTCONNMSG
+        else:
+            return HSTNOTCONNMSG
+
+
+def parseIP1(string):
+    start = string.find('of ') + len('of ')
+    end = string.find(' please')
+    substring = string[start:end]
+    print(substring)
+    return substring
+
+
+# to handle [IP#3] protocol and extract a variable hostname
+def parseIP2_3(string):
+    start = string.find('is ') + len('is ')
+    end = string.find(' Online?')
+    substring = string[start:end]
+    return substring
+
+
+# given a list of IPs, it finds the associated hostnames and returns a list
+def findHostNames(ip_lst):
+    nameLst = []
+    for IP in ip_lst:
+        try:
+            # since a tupule is returned, we only want the hostname which is the first value in the tupule
+            hst_name = socket.gethostbyaddr(IP)[0]
+            nameLst.append(hst_name)
+        except socket.herror:
+            print(f"{IP} does not have a PTR record")
+    print(nameLst)
+    return nameLst
+
+
+sendMsgToServer(greetingMsg())  # first message to send
 input()
 rcvd_msg = client.recv(2048).decode(FORMAT)
-clients = CheckIP(rcvd_msg[0:6], rcvd_msg[10:26])
-print(rcvd_msg)  # print receive message from
-send("The Following Devices are currently connected to the network: ")
+print(rcvd_msg)  # print receive message from server
+
+jobResult = jobHandler(rcvd_msg)
+
+if isinstance(jobResult, list):  # if the result is a list it means list of IPs is returned
+    for ipAddr in jobResult:
+        sendMsgToServer(ipAddr)
+else:
+    sendMsgToServer(jobResult)
+
+# clients = jobHandler(rcvd_msg[0:6], rcvd_msg[49:65]) FOR CHECKALLIPS
+# isBlankOnline = checkOneIP('none', rcvd_msg[10:19]) FOR CHECKONEIP HOSTNAME
+# sendMsgToServer(isBlankOnline)
+
+
 input()
-for client in clients:
-	client_str = str("{:16}    {}".format(client['ip'], client['mac']))
-	print(client_str)
-	#client_str = f"{client.ip}"
-	#send(client_str)
-input()  # when user hits enter or any input it will now disconnect
-send("Disconnecting now!")  # disconnect message
-send(DISCONNECT_MESSAGE)  # send disconnect message
 
 
-
-
-
+input()
+sendMsgToServer("Disconnecting now!")  # disconnect message
+sendMsgToServer(DISCONNECT_MESSAGE)  # send disconnect message
 
 
 # scapy
 # SENDING
 # send(IP(src="192.168.1.103",dst="192.168.1.1")/ICMP()/"HelloWorld")   the first / separates the protocol from the header data.
 # SNIFFING
-#sniff(iface="wlp4s0", prn=lambda x:x.summary)
+# sniff(iface="wlp4s0", prn=lambda x:x.summary)
 # DOSSING
-#send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)
+# send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)

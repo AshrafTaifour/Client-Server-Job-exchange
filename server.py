@@ -1,26 +1,24 @@
+# INSTRUCTIONS:
+# 1) Change the SERVER const to match your machine's server
+# 2) Change jobs instructions to match IPs and Machines that are online on your network
+# 2) run server.py first
+# 3) run client.py with administrator priviledges
+
 # JOBS:
 # ONE TO ONE
-# 1) given IP address/Hostname    IS ONLINE/ ARE THEY CONNECTED TO THE NETWORK?  --- JOB SEEKER FINDS THIS OUT NOTE: is this sniffing? must include IP
-# LINUX: ip addr show
-#WINDOWS: ipconfig /all
-
-
-# 2) detect status of given port at an IP address (open/closed/filtered), can use UDP or TCP ports. MUST INCLUDE IP + port number
-# 3) detect all live IP addresses on a given subet. target subnet is required  in a.b.c.d/x format?
-# 4) detect status of all registered TCP-UDP ports on given IP address/subnet
+# 1) given IP address/Hostname    IS ONLINE/ ARE THEY CONNECTED TO THE NETWORK? NOTE: name of function is checkOneIP
+# 3) detect all live IP addresses on a given subet. NOTE: name of function is checkAllIPs
 
 # ONE-TO-MANY
 # 1) execute an ICMP flood attack against a given IP or subnet
 # 2) execute a TCP flood attack against an IP or port
 # 3) UDP flood attack on IP/Port
 
-# requirements know sniffing and sending packets I guess.
-
 import socket
 import threading
 
 # Variables below are constants
-HEADER = 64  # header describes the properties of the message that it comes with
+HEADER = 1024  # header describes the properties of the message that it comes with
 PORT = 5050  # Port that the socket will be using
 SERVER = '192.168.1.134'  # my machine's IP, obtained by ifconfig
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,8 +51,11 @@ def ClientHandler(addr, conn):
                 connected = HELO_PROTO
 
             # TODO: send this once (and wait until client has completed the job)
-            # check if this IP address is online
-            conn.send(IsIPOnline('192.168.1.144/24', 'none'))
+
+            conn.send(LookupNetworkConn('192.168.1.144/24'))  # WORKS!
+            # conn.send(IsIPOnline('192.168.1.1', 'none')) #WORKS!
+            # conn.send(IsIPOnline('none', 'nouriddin')) #WORKS!
+
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()
@@ -84,16 +85,17 @@ def EstablishConn(initMsg):  # ensures client is using correct protocol
         return False
 
 
+def LookupNetworkConn(ipaddr):  # THIS WORKS!
+    return f"[IP#1] List all the connections on the subnet of {ipaddr} please".encode(FORMAT)
+
 # asks client if an IP address or hostname are online on a network.
+
+
 def IsIPOnline(ipaddr, hostname):
     if(hostname == "none"):
-        return f"[IP#1] Is {ipaddr} Online?".encode(FORMAT)
+        return f"[IP#2] is {ipaddr} Online?".encode(FORMAT)
     else:
-        return f"[IP#2] Is {hostname} Online?".encode(FORMAT)
-
-
-def LookupNetworkConn():
-    print("LOOKED UP!")
+        return f"[IP#3] is {hostname} Online?".encode(FORMAT)
 
 
 def TCPFlood():
@@ -106,8 +108,8 @@ def UDPFlood():
 # test
 # CreateJob('IsIPOnline')
 # CreateJob('LookupNetworkConn')
-# CreateJob('TCPFlood')
-# CreateJob('UDPFlood')
+# CreateJob('TCPF')
+# CreateJob('UDPF')
 
 
 print("initializing server...")
@@ -117,6 +119,6 @@ Init()
 # SENDING
 # send(IP(src="192.168.1.103",dst="192.168.1.1")/ICMP()/"HelloWorld")   the first / separates the protocol from the header data.
 # SNIFFING
-#sniff(iface="wlp4s0", prn=lambda x:x.summary)
+# sniff(iface="wlp4s0", prn=lambda x:x.summary)
 # DOSSING
-#send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)
+# send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)
