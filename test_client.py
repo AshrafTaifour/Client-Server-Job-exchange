@@ -13,8 +13,7 @@ from client import checkOneIP, checkAllIPs, TCPFlood, ICMPFlood
 
 TARGET_IP = '192.168.1.144'
 # this should match the current devices that can be detected so you can test the function
-LIST_OFIPS = ['Linksys17813', 'nouriddin',
-              'DESKTOP-44HR2VL', 'Chromecast', 'NouriddnsiPhone']
+LIST_OFIPS = ['DESKTOP-44HR2VL', 'Chromecast']
 PORT_NUM = 5050
 
 # one test at a time
