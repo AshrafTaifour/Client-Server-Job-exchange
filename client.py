@@ -1,7 +1,7 @@
 # INSTRUCTIONS:
 # 1) Change the SERVER const to match your machine's server
-# 2) Change jobs instructions to match IPs and Machines that are online on your network
-# 3) run server.py first
+# 2) Change TARGET_IP to match the IP where you can detect the packets
+# 3) run server.py first (send only one job at a time to test each one individually)
 # 4) run client.py with administrator priviledges
 
 # JOBS:
@@ -10,8 +10,8 @@
 # 3) detect all live IP addresses on a given subet. NOTE: name of function is checkAllIPs
 
 # ONE-TO-MANY
-# 1) execute an ICMP flood attack against a given IP or subnet
-# 2) execute a TCP flood attack against an IP or port
+# 1) execute an ICMP flood attack against a given IP or subnet NOTE: Name of function is ICMPFlood()
+# 2) execute a TCP flood attack against an IP or port NOTE: Name of function is TCPFlood()
 
 import socket  # socket object will be used to make the connection
 from scapy.all import *
@@ -112,8 +112,6 @@ def checkOneIP(target_ip, hostname):  # takes ip OR hostname
 
     if(hostname == 'none'):  # we only have target_ip
         online_lst = checkAllIPs(target_ip)  # check subnet
-        print(target_ip)
-        print(online_lst)
         if(target_ip in online_lst):  # if given ip is in subnet
             return IPCONNMSG
         else:
@@ -204,8 +202,9 @@ def ICMPFlood(target_ip):
 sendMsgToServer(GREETING_MSG)  # first message to send
 
 rcvd_msg = client.recv(2048).decode(FORMAT)
-print(rcvd_msg)  # print receive message from server
+print(f"The Server Says: {rcvd_msg}")  # print receive message from server
 jobResult = jobHandler(rcvd_msg)
+print(f"Job Result is: '{jobResult}'")
 if isinstance(jobResult, list):  # if the result is a list it means list of IPs is returned
     sendMsgToServer(
         "The Following Devices Are currently connected to the network: ")

