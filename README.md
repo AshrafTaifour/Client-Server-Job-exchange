@@ -4,7 +4,7 @@
 1) Change the SERVER const to match your machine's server
 2) Change TARGET_IP to match the IP where you can detect the packets
 3) run server.py first (send only one job at a time to test each one individually)
-4) run client.py with administrator priviledges
+4) run client.py with administrator privileges
 
 # JOBS:
 # ONE TO ONE
