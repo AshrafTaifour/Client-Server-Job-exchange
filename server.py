@@ -116,11 +116,3 @@ def ICMPFlood(target_ip):
 
 print("initializing server...")
 Init()
-
-# scapy
-# SENDING
-# send(IP(src="192.168.1.103",dst="192.168.1.1")/ICMP()/"HelloWorld")   the first / separates the protocol from the header data.
-# SNIFFING
-# sniff(iface="wlp4s0", prn=lambda x:x.summary)
-# DOSSING
-# send(IP(src="192.168.1.103", dst="192.168.1.1")/TCP(sport=80, dport=80), count=10000)
